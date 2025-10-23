@@ -1,10 +1,10 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import GaragePage from './garage';
+import Garage from './garage';
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<GaragePage />} />
+        <Route path="/" element={<Garage />} />
       </Routes>
     </BrowserRouter>
   );
