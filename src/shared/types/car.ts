@@ -4,6 +4,11 @@ export type Car = {
   color: string;
 };
 
+export type CarResponse = {
+    cars: Car[];
+  totalCount: number;
+}
+
 export type NewCar = {
    name: string;
   color: string;
