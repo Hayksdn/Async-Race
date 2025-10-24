@@ -1,18 +1,27 @@
-import { Button, Flex } from "@chakra-ui/react";
+import { Button, Flex } from '@chakra-ui/react';
+import { CustomContainer } from './layout/container';
+import { NavLink } from 'react-router-dom';
 
 const Hero = () => {
   return (
-    <Flex  flexDir='row' w='fit-content' h='fit-content'>
-      <Button
- variant="transparent"
-  // borderImageSlice={1}
-  // borderImageSource="linear-gradient(90deg, #8abcc4, #9fbfc9)"
->
-  GARAGE
-</Button>
-        <Button variant='secondary'>WINNERS</Button>
-    </Flex>
-
+    <CustomContainer
+      variant="container"
+      mx="auto"
+      display="flex"
+      flexDir="row"
+      gap="3rem"
+      mb="5rem"
+      mt="3rem"
+    >
+      <Flex flexDir="column" gap="4" pt="4" pl="4">
+        <NavLink to="/garage">
+          <Button variant="primary">GARAGE</Button>
+        </NavLink>
+        <NavLink to="/winners">
+          <Button variant="secondary">WINNERS</Button>{' '}
+        </NavLink>
+      </Flex>
+    </CustomContainer>
   );
 };
 

@@ -1,11 +1,14 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Garage from './garage';
+import { Layout } from '@/shared/components/layout/layout';
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Garage />} />
-      </Routes>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Garage />} />
+        </Routes>
+      </Layout>
     </BrowserRouter>
   );
 }
