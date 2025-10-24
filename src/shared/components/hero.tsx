@@ -14,7 +14,7 @@ const Hero = () => {
       mt="3rem"
     >
       <Flex flexDir="column" gap="4" pt="4" pl="4">
-        <NavLink to="/garage">
+        <NavLink to="/">
           <Button variant="primary">GARAGE</Button>
         </NavLink>
         <NavLink to="/winners">

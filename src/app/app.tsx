@@ -1,6 +1,9 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import Garage from './garage';
 import { Layout } from '@/shared/components/layout/layout';
+import axios from 'axios';
+import Garage from './garage';
+
+axios.defaults.baseURL = 'http://localhost:3000/';
 function App() {
   return (
     <BrowserRouter>
