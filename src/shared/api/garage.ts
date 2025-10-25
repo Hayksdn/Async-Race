@@ -32,3 +32,8 @@ export const createMultipleCars = async (count: number = 100): Promise<Car[]> =>
 export const deleteCar = async (carId:number)=>{
     await axios.delete(`/garage/${carId}`)
 }
+
+export const updateCarApi = async (carId: number, updatedCar: NewCar): Promise<Car> =>{
+    const {data} = await axios.put(`/garage/${carId}`, updatedCar)
+    return data
+}

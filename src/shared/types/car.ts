@@ -18,3 +18,8 @@ export type FetchCarsParams = {
   page: number;
   limit?: number;
 };
+
+export type UpdateCarPayload = {
+  carId: number;
+  updatedCar: NewCar;
+};

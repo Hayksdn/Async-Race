@@ -1,7 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { Car, CarResponse } from '@/shared/types/car';
-import { fetchCars, addCar, generateCars, removeCar } from './garageThunks';
-import { cardSlotRecipe } from '@chakra-ui/react/theme';
+import { fetchCars, addCar, generateCars, removeCar, updateCar } from './garageThunks';
 
 interface GarageState {
   cars: Car[];
@@ -10,7 +9,6 @@ interface GarageState {
   totalPageCount: number;
 }
 const CARS_PER_PAGE = 7;
-
 
 const initialState: GarageState = { cars: [], loading: false, totalCount: 0, totalPageCount: 0 };
 
@@ -27,30 +25,31 @@ const garageSlice = createSlice({
         const { cars, totalCount } = action.payload;
         state.cars = cars;
         state.totalCount = totalCount;
-        state.totalPageCount = Math.ceil(totalCount/CARS_PER_PAGE);
+        state.totalPageCount = Math.ceil(totalCount / CARS_PER_PAGE);
         state.loading = false;
       })
       .addCase(fetchCars.rejected, (state) => {
         state.loading = false;
       })
-      .addCase(addCar.fulfilled, (state, action: PayloadAction<Car>) => {
-     
-
-      })
+      .addCase(addCar.fulfilled, (state, action: PayloadAction<Car>) => {})
       .addCase(generateCars.pending, (state) => {
         state.loading = true;
       })
-      .addCase(generateCars.fulfilled, (state, action: PayloadAction<Car[]>) => {
-   
-      })
+      .addCase(generateCars.fulfilled, (state, action: PayloadAction<Car[]>) => {})
       .addCase(generateCars.rejected, (state) => {
         state.loading = false;
       })
-     .addCase(removeCar.fulfilled, (state, action: PayloadAction<number>) => {
-          state.cars = state.cars.filter(car => car.id !== action.payload)
-
+      .addCase(removeCar.fulfilled, (state, action: PayloadAction<number>) => {
+        state.cars = state.cars.filter((car) => car.id !== action.payload);
       })
-   
+
+      .addCase(updateCar.fulfilled, (state, action: PayloadAction<Car>) => {
+        const index = state.cars.findIndex((car) => car.id === action.payload.id);
+        if (index !== -1) {
+          state.cars[index].name = action.payload.name;
+          state.cars[index].color = action.payload.color;
+        }
+      });
   },
 });
 

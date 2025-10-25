@@ -46,6 +46,9 @@ const Garage = () => {
     dispatch(fetchCars({ page: currentPage }));
   };
 
+
+  
+
   return (
     <CustomContainer
       variant="containerFull"
@@ -85,7 +88,7 @@ const Garage = () => {
           <Button onClick={handleCreate}>Create</Button>
         </Flex>
 
-        <Flex flexDir="row" gap="2">
+        <Flex flexDir="row" gap="2" >
           <Input
             placeholder="TYPE CAR BRAND"
             size="md"
@@ -152,7 +155,7 @@ const Garage = () => {
             <Pagination.PrevTrigger asChild>
               <IconButton>
                 <HiChevronLeft />
-              </IconButton>
+              </IconButton> 
             </Pagination.PrevTrigger>
             <Pagination.PageText />
             <Pagination.NextTrigger asChild>
