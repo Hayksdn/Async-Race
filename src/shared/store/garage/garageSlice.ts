@@ -46,8 +46,8 @@ const garageSlice = createSlice({
       .addCase(updateCar.fulfilled, (state, action: PayloadAction<Car>) => {
         const index = state.cars.findIndex((car) => car.id === action.payload.id);
         if (index !== -1) {
-          state.cars[index].name = action.payload.name;
-          state.cars[index].color = action.payload.color;
+             state.cars[index] = action.payload;
+
         }
       });
   },

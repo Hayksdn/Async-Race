@@ -4,12 +4,22 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '@/shared/store/store';
 import { useEffect, useState } from 'react';
 import { CustomContainer } from '@/shared/components/layout/container';
-import { addCar, fetchCars, generateCars, removeCar } from '@/shared/store/garage/garageThunks';
+import {
+  addCar,
+  fetchCars,
+  generateCars,
+  removeCar,
+  updateCar,
+} from '@/shared/store/garage/garageThunks';
 import CarIcon from '@/shared/assets/icons/car';
 import { HiChevronLeft, HiChevronRight } from 'react-icons/hi';
 const Garage = () => {
   const [brand, setBrand] = useState('');
   const [color, setColor] = useState('#ff0000');
+
+  const [editingCarBrand, setEditingCarBrand] = useState('');
+  const [editingCarColor, setEditingCarColor] = useState('#ff0000');
+  const [isEditingCarId, setIsEditingCarId] = useState(0);
 
   const dispatch = useDispatch<AppDispatch>();
   const cars = useSelector((state: RootState) => state.garage.cars);
@@ -46,8 +56,22 @@ const Garage = () => {
     dispatch(fetchCars({ page: currentPage }));
   };
 
+  const handleUpdate = async () => {
+    if (!editingCarBrand || !isEditingCarId) return;
 
-  
+    await dispatch(
+      updateCar({
+        carId: isEditingCarId,
+        updatedCar: { name: editingCarBrand, color: editingCarColor },
+      })
+    );
+
+    dispatch(fetchCars({ page: currentPage })); 
+
+    setEditingCarBrand('');
+    setEditingCarColor('#ff0000');
+    setIsEditingCarId(0);
+  };
 
   return (
     <CustomContainer
@@ -88,26 +112,28 @@ const Garage = () => {
           <Button onClick={handleCreate}>Create</Button>
         </Flex>
 
-        <Flex flexDir="row" gap="2" >
+        <Flex flexDir="row" gap="2">
           <Input
             placeholder="TYPE CAR BRAND"
             size="md"
             variant="outline"
-            // value={brand}
-            // onChange={(e) => setBrand(e.target.value)}
+            value={editingCarBrand}
+            onChange={(e) => setEditingCarBrand(e.target.value)}
           />
 
           <Input
             type="color"
-            // value={color}
-            // onChange={(e) => setColor(e.target.value)}
+            value={editingCarColor}
+            onChange={(e) => setEditingCarColor(e.target.value)}
             width="40px"
             height="40px"
             padding="0"
             borderRadius="5px"
           />
 
-          <Button>Update</Button>
+          <Button onClick={handleUpdate} disabled={!isEditingCarId}>
+            Update
+          </Button>
         </Flex>
 
         <Button onClick={handleGenerateCars}>GENERATE CARS</Button>
@@ -120,7 +146,7 @@ const Garage = () => {
               <Flex flexDir="row" gap="2" key={car.id}>
                 <Flex flexDir="row">
                   <Flex flexDir="column" gap="1">
-                    <Button>Select</Button>
+                    <Button onClick={() => setIsEditingCarId(car.id)}>Select</Button>
                     <Button onClick={() => handleRemove(car.id)}>Remove</Button>
                   </Flex>
 
@@ -136,6 +162,8 @@ const Garage = () => {
                   height="50px"
                   style={{ transform: 'rotate(90deg)' }}
                 />
+
+                <Text>{car.name}</Text>
               </Flex>
             );
           })}
@@ -155,7 +183,7 @@ const Garage = () => {
             <Pagination.PrevTrigger asChild>
               <IconButton>
                 <HiChevronLeft />
-              </IconButton> 
+              </IconButton>
             </Pagination.PrevTrigger>
             <Pagination.PageText />
             <Pagination.NextTrigger asChild>
