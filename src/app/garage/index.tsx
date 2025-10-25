@@ -1,11 +1,12 @@
-import { Button, Flex, Input, Text } from '@chakra-ui/react';
+import { Button, ButtonGroup, Flex, IconButton, Input, Pagination, Text } from '@chakra-ui/react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '@/shared/store/store';
 import { useEffect, useState } from 'react';
 import { CustomContainer } from '@/shared/components/layout/container';
-import { addCar, fetchCars, generateCars } from '@/shared/store/garage/garageThunks';
+import { addCar, fetchCars, generateCars, removeCar } from '@/shared/store/garage/garageThunks';
 import CarIcon from '@/shared/assets/icons/car';
+import { HiChevronLeft, HiChevronRight } from 'react-icons/hi';
 const Garage = () => {
   const [brand, setBrand] = useState('');
   const [color, setColor] = useState('#ff0000');
@@ -13,24 +14,38 @@ const Garage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const cars = useSelector((state: RootState) => state.garage.cars);
   const totalCount = useSelector((state: RootState) => state.garage.totalCount);
+  const totalPageCount = useSelector((state: RootState) => state.garage.totalPageCount);
 
+  const [currentPage, setCurrentPage] = useState(1);
   //////mount all cars
   useEffect(() => {
-    dispatch(fetchCars());
-  }, [dispatch]);
+    dispatch(fetchCars({ page: currentPage }));
+  }, [dispatch, currentPage]);
 
   ///////create 1 car
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!brand) return;
-    dispatch(addCar({ name: brand, color }));
+
+    await dispatch(addCar({ name: brand, color })); // wait for backend
+    dispatch(fetchCars({ page: currentPage })); // refresh current page
     setBrand('');
     setColor('#ff0000');
   };
   //////////car generation
   const handleGenerateCars = async () => {
     await dispatch(generateCars()); // generate 100 cars
-    dispatch(fetchCars()); // reload cars to show them in UI
+    dispatch(fetchCars({ page: currentPage })); // refresh current page
   };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleRemove = async (carId: number) => {
+    await dispatch(removeCar(carId));
+    dispatch(fetchCars({ page: currentPage }));
+  };
+
   return (
     <CustomContainer
       variant="containerFull"
@@ -96,18 +111,57 @@ const Garage = () => {
       </Flex>
 
       <Flex>
-        {/* <CarIcon
-          width="50px"
-          color="#ff0000"
-          height="50px"
-          style={{ transform: 'rotate(90deg)' }}
-        /> */}
+        <Flex flexDir="column">
+          {cars.map((car) => {
+            return (
+              <Flex flexDir="row" gap="2" key={car.id}>
+                <Flex flexDir="row">
+                  <Flex flexDir="column" gap="1">
+                    <Button>Select</Button>
+                    <Button onClick={() => handleRemove(car.id)}>Remove</Button>
+                  </Flex>
 
-        <Flex>{cars.length === 0 ? 'Loading...' : cars.map((car) => car.name).join(', ')}</Flex>
+                  <Flex flexDir="column" gap="1">
+                    <Button>A</Button>
+                    <Button>B</Button>
+                  </Flex>
+                </Flex>
+
+                <CarIcon
+                  width="50px"
+                  color={car.color}
+                  height="50px"
+                  style={{ transform: 'rotate(90deg)' }}
+                />
+              </Flex>
+            );
+          })}
+        </Flex>
       </Flex>
 
-      <Flex flexDir='row' justify='space-between'>
-            <Text color='red.500'>GARAGE{totalCount}</Text>
+      <Flex flexDir="row" justify="space-between">
+        <Text color="red.500">GARAGE{totalCount}</Text>
+
+        <Pagination.Root
+          count={totalCount}
+          pageSize={7}
+          page={currentPage}
+          onPageChange={(details) => handlePageChange(details.page)}
+        >
+          <ButtonGroup gap="4" size="sm" variant="ghost">
+            <Pagination.PrevTrigger asChild>
+              <IconButton>
+                <HiChevronLeft />
+              </IconButton>
+            </Pagination.PrevTrigger>
+            <Pagination.PageText />
+            <Pagination.NextTrigger asChild>
+              <IconButton>
+                <HiChevronRight />
+              </IconButton>
+            </Pagination.NextTrigger>
+          </ButtonGroup>
+        </Pagination.Root>
       </Flex>
     </CustomContainer>
   );

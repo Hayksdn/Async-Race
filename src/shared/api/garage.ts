@@ -28,3 +28,7 @@ export const createMultipleCars = async (count: number = 100): Promise<Car[]> =>
 
   return createdCars;
 };
+
+export const deleteCar = async (carId:number)=>{
+    await axios.delete(`/garage/${carId}`)
+}

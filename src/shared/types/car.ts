@@ -5,11 +5,16 @@ export type Car = {
 };
 
 export type CarResponse = {
-    cars: Car[];
+  cars: Car[];
   totalCount: number;
-}
+};
 
 export type NewCar = {
-   name: string;
+  name: string;
   color: string;
-}
+};
+
+export type FetchCarsParams = {
+  page: number;
+  limit?: number;
+};
