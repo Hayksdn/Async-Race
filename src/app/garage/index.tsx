@@ -13,6 +13,8 @@ import {
 } from '@/shared/store/garage/garageThunks';
 import CarIcon from '@/shared/assets/icons/car';
 import { HiChevronLeft, HiChevronRight } from 'react-icons/hi';
+import { setDriveEngine, setEngineStatus } from '@/shared/store/engine/engineThunks';
+import type { Car } from '@/shared/types/car';
 const Garage = () => {
   const [brand, setBrand] = useState('');
   const [color, setColor] = useState('#ff0000');
@@ -21,10 +23,20 @@ const Garage = () => {
   const [editingCarColor, setEditingCarColor] = useState('#ff0000');
   const [isEditingCarId, setIsEditingCarId] = useState(0);
 
+  ///////////garage dispatch
   const dispatch = useDispatch<AppDispatch>();
   const cars = useSelector((state: RootState) => state.garage.cars);
   const totalCount = useSelector((state: RootState) => state.garage.totalCount);
   const totalPageCount = useSelector((state: RootState) => state.garage.totalPageCount);
+
+  ///////////////////enginedispatch
+  const engineStatus = useSelector((state: RootState) => state.engine.engineStatus);
+  const driving = useSelector((state: RootState) => state.engine.driving);
+  const velocity = useSelector((state: RootState) => state.engine.velocity);
+
+  //animation state  
+  const [carPositions, setCarPositions] = useState<Record<number, number>>({});
+
 
   const [currentPage, setCurrentPage] = useState(1);
   //////mount all cars
@@ -66,12 +78,64 @@ const Garage = () => {
       })
     );
 
-    dispatch(fetchCars({ page: currentPage })); 
+    dispatch(fetchCars({ page: currentPage }));
 
     setEditingCarBrand('');
     setEditingCarColor('#ff0000');
     setIsEditingCarId(0);
   };
+
+  const handleEngineToggle = async (carId: number) => {
+    if (driving[carId] === true) return;
+    if (engineStatus[carId] !== 'started') {
+      await dispatch(setEngineStatus({ carId, status: 'started' }));
+      await dispatch(setDriveEngine({ carId, status: 'drive' }));
+       moveCar(carId);
+      return;
+    }
+  };
+
+  const handleStopEngine = async (carId: number) => {
+    if (driving[carId] === true) {
+      await dispatch(setEngineStatus({ carId, status: 'stopped' }));
+    }
+  };
+
+  const startAllEngines = async (cars: Car[]) => {
+    await Promise.all(
+      cars.map(async (car) => {
+        if (!driving[car.id]) {
+          try {
+            await dispatch(setEngineStatus({ carId: car.id, status: 'started' }));
+            await dispatch(setDriveEngine({ carId: car.id, status: 'drive' }));
+          } catch (error) {
+            console.error(`Failed to start car ${car.id}`, error);
+          }
+        }
+      })
+    );
+  };
+
+  const stopAllEngines = async (cars: Car[], driving: Record<number, boolean>) => {
+    await Promise.all(
+      cars.map(async (car) => {
+        if (driving[car.id]) {
+          try {
+            await dispatch(setEngineStatus({ carId: car.id, status: 'stopped' }));
+          } catch (error) {
+            console.error(`Failed to stop car ${car.id}`, error);
+          }
+        }
+      })
+    );
+  };
+
+
+  //animation func
+
+ const moveCar = (carId: number) => {
+  
+};
 
   return (
     <CustomContainer
@@ -86,8 +150,8 @@ const Garage = () => {
     >
       <Flex flexDir="row" gap="4rem" pt="2rem">
         <Flex flexDir="row" gap="3">
-          <Button>Race</Button>
-          <Button>Reset</Button>
+          <Button onClick={() => startAllEngines(cars)}>Race</Button>
+          <Button onClick={() => stopAllEngines(cars, driving)}>Reset</Button>
         </Flex>
 
         <Flex flexDir="row" gap="2">
@@ -151,8 +215,8 @@ const Garage = () => {
                   </Flex>
 
                   <Flex flexDir="column" gap="1">
-                    <Button>A</Button>
-                    <Button>B</Button>
+                    <Button onClick={() => handleEngineToggle(car.id)}>A</Button>
+                    <Button onClick={() => handleStopEngine(car.id)}>B</Button>
                   </Flex>
                 </Flex>
 
@@ -160,7 +224,7 @@ const Garage = () => {
                   width="50px"
                   color={car.color}
                   height="50px"
-                  style={{ transform: 'rotate(90deg)' }}
+  style={{ transform: 'rotate(90deg)' }}
                 />
 
                 <Text>{car.name}</Text>
