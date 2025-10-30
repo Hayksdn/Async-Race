@@ -1,8 +1,17 @@
-import { Button, ButtonGroup, Flex, IconButton, Input, Pagination, Text } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  Flex,
+  IconButton,
+  Input,
+  Pagination,
+  Text,
+} from '@chakra-ui/react';
 
 import { useDispatch, useSelector } from 'react-redux';
-import type { AppDispatch, RootState } from '@/shared/store/store';
-import { useEffect, useState } from 'react';
+import { store, type AppDispatch, type RootState } from '@/shared/store/store';
+import { useEffect, useRef, useState } from 'react';
 import { CustomContainer } from '@/shared/components/layout/container';
 import {
   addCar,
@@ -15,6 +24,8 @@ import CarIcon from '@/shared/assets/icons/car';
 import { HiChevronLeft, HiChevronRight } from 'react-icons/hi';
 import { setDriveEngine, setEngineStatus } from '@/shared/store/engine/engineThunks';
 import type { Car } from '@/shared/types/car';
+import type { SvgIconType } from '@/shared/assets/icons/_props';
+import { useContainerDimensions } from '@/shared/hooks/useContainerDimensions';
 const Garage = () => {
   const [brand, setBrand] = useState('');
   const [color, setColor] = useState('#ff0000');
@@ -32,13 +43,18 @@ const Garage = () => {
   ///////////////////enginedispatch
   const engineStatus = useSelector((state: RootState) => state.engine.engineStatus);
   const driving = useSelector((state: RootState) => state.engine.driving);
-  const velocity = useSelector((state: RootState) => state.engine.velocity);
+  // const velocity = useSelector((state: RootState) => state.engine.velocity);
+  // const distance = useSelector((state: RootState) => state.engine.distance);
+  //animation state
 
-  //animation state  
-  const [carPositions, setCarPositions] = useState<Record<number, number>>({});
+  const carContainerRef = useRef<Record<number, HTMLDivElement | null>>({});
+  const carPositions = useRef<Record<number, number>>({});
+  const animationRefs = useRef<Record<number, number>>({});
 
+  const { containerRef, width, getMaxDistance } = useContainerDimensions();
 
   const [currentPage, setCurrentPage] = useState(1);
+
   //////mount all cars
   useEffect(() => {
     dispatch(fetchCars({ page: currentPage }));
@@ -48,15 +64,15 @@ const Garage = () => {
   const handleCreate = async () => {
     if (!brand) return;
 
-    await dispatch(addCar({ name: brand, color })); // wait for backend
-    dispatch(fetchCars({ page: currentPage })); // refresh current page
+    await dispatch(addCar({ name: brand, color }));
+    dispatch(fetchCars({ page: currentPage }));
     setBrand('');
     setColor('#ff0000');
   };
   //////////car generation
   const handleGenerateCars = async () => {
-    await dispatch(generateCars()); // generate 100 cars
-    dispatch(fetchCars({ page: currentPage })); // refresh current page
+    await dispatch(generateCars());
+    dispatch(fetchCars({ page: currentPage }));
   };
 
   const handlePageChange = (page: number) => {
@@ -88,20 +104,25 @@ const Garage = () => {
   const handleEngineToggle = async (carId: number) => {
     if (driving[carId] === true) return;
     if (engineStatus[carId] !== 'started') {
-      await dispatch(setEngineStatus({ carId, status: 'started' }));
-      await dispatch(setDriveEngine({ carId, status: 'drive' }));
-       moveCar(carId);
+      const result = await dispatch(setEngineStatus({ carId, status: 'started' })).unwrap();
+
+      moveCar(carId, result.velocity, result.distance);
+
+      try {
+        const driveEngineResult = await dispatch(
+          setDriveEngine({ carId, status: 'drive' })
+        ).unwrap();
+      } catch (error) {
+        if (animationRefs.current[carId]) {
+          cancelAnimationFrame(animationRefs.current[carId]);
+          delete animationRefs.current[carId];
+        }
+      }
       return;
     }
   };
 
-  const handleStopEngine = async (carId: number) => {
-    if (driving[carId] === true) {
-      await dispatch(setEngineStatus({ carId, status: 'stopped' }));
-    }
-  };
-
-  const startAllEngines = async (cars: Car[]) => {
+   const startAllEngines = async (cars: Car[]) => {
     await Promise.all(
       cars.map(async (car) => {
         if (!driving[car.id]) {
@@ -115,6 +136,22 @@ const Garage = () => {
       })
     );
   };
+
+  const handleStopEngine = (carId: number) => {
+    dispatch(setEngineStatus({ carId, status: 'stopped' }));
+    if (animationRefs.current[carId]) {
+      cancelAnimationFrame(animationRefs.current[carId]);
+      delete animationRefs.current[carId];
+    }
+    carPositions.current[carId] = 0;
+
+    const carEl = carContainerRef.current[carId];
+    if (carEl) {
+      carEl.style.transform = `rotate(90deg)`;
+    }
+  };
+
+ 
 
   const stopAllEngines = async (cars: Car[], driving: Record<number, boolean>) => {
     await Promise.all(
@@ -130,15 +167,37 @@ const Garage = () => {
     );
   };
 
+  const moveCar = (carId: number, velocity: number, distance: number) => {
+    let start: number | null = null;
 
-  //animation func
+    if (carPositions.current[carId] === undefined) carPositions.current[carId] = 0;
 
- const moveCar = (carId: number) => {
-  
-};
+    function step(timestamp: number) {
+      if (!start) start = timestamp;
 
+      const carEl = carContainerRef.current[carId];
+      const maxDistance = getMaxDistance(carEl, distance);
+
+      const elapsed = (timestamp - start) / 1000;
+      const traveled = Math.min(elapsed * velocity, maxDistance);
+
+      if (carEl) {
+        carPositions.current[carId] = traveled;
+        carEl.style.transform = `translateX(${traveled}px) rotate(90deg)`;
+      }
+
+      if (traveled < distance) {
+        animationRefs.current[carId] = requestAnimationFrame(step);
+      } else {
+        delete animationRefs.current[carId];
+      }
+    }
+
+    animationRefs.current[carId] = requestAnimationFrame(step);
+  };
   return (
     <CustomContainer
+      ref={containerRef}
       variant="containerFull"
       mx="auto"
       display="flex"
@@ -220,12 +279,16 @@ const Garage = () => {
                   </Flex>
                 </Flex>
 
-                <CarIcon
-                  width="50px"
-                  color={car.color}
-                  height="50px"
-  style={{ transform: 'rotate(90deg)' }}
-                />
+                <Box
+                  ref={(el: HTMLDivElement | null) => {
+                    carContainerRef.current[car.id] = el;
+                  }}
+                  style={{
+                    transform: `rotate(90deg)`,
+                  }}
+                >
+                  <CarIcon width="50px" color={car.color} height="50px" />
+                </Box>
 
                 <Text>{car.name}</Text>
               </Flex>

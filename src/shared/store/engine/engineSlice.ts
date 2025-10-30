@@ -31,11 +31,9 @@ const engineSlice = createSlice({
         state.velocity[carId] = velocity;
         state.distance[carId] = distance;
 
-        if (status === 'stopped') {
+         if (status === 'stopped') {
           state.driving[carId] = false;
-        } else {    
-          state.driving[carId] = state.driving[carId] ?? false;
-        }
+         } 
       })
       .addCase(setDriveEngine.fulfilled, (state, action: PayloadAction<DriveEngineResponse>) => {
         state.driving[action.payload.carId] = action.payload.success;
