@@ -16,8 +16,8 @@ export const setEngineStatus = createAsyncThunk<CarEngineResponse, EngineControl
 
 export const setDriveEngine = createAsyncThunk<DriveEngineResponse, EngineControlPayload>(
   'engine/driveEngine',
-  async ({ carId, status }) => {
-    const driveEngineData = await driveEngineApi(carId, status);
+  async ({ carId, status }, thunkAPI) => {
+    const driveEngineData = await driveEngineApi(carId, status, thunkAPI.signal);
     return { carId, ...driveEngineData };
   }
 );

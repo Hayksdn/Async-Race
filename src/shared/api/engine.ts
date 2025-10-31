@@ -8,9 +8,14 @@ export const setEngineStatusApi = async (carId: number, status: string): Promise
   return data;
 };
 
-export const driveEngineApi = async (carId: number, status: string): Promise<DriveEngineData> => {
-  const { data } = await axios.patch('/engine', null,{
+export const driveEngineApi = async (
+  carId: number,
+  status: string,
+  signal?: AbortSignal
+): Promise<DriveEngineData> => {
+  const { data } = await axios.patch('/engine', null, {
     params: { id: carId, status },
+    signal,
   });
   return data;
 };

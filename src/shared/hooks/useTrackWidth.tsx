@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-export const useContainerDimensions = () => {
+export const useTrackWidth = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
 
@@ -18,7 +18,13 @@ export const useContainerDimensions = () => {
   }, []);
 
   const getMaxDistance = (carEl: HTMLDivElement | null, distance: number) => {
-    if (!carEl || !containerRef.current) return 0;
+    if (!carEl || !containerRef.current){
+      console.log('containerRef.current', containerRef.current)
+      console.log(carEl, 'carel')
+      return 0;
+
+    }
+      
 
     const startX = carEl.offsetLeft;
 
@@ -26,6 +32,7 @@ export const useContainerDimensions = () => {
       distance,
       containerRef.current.clientWidth - startX - carEl.offsetWidth
     );
+
     return maxDistance;
   };
 
