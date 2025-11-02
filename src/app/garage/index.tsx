@@ -17,6 +17,7 @@ import {
   addCar,
   fetchCars,
   generateCars,
+  getCar,
   removeCar,
   updateCar,
 } from '@/shared/store/garage/garageThunks';
@@ -53,10 +54,14 @@ const Garage = () => {
   const { stopEngine, stopAllEngines } = useStopEngine(ongoingDrive, resetCar);
   const [currentPage, setCurrentPage] = useState(1);
 
-  //////mount all cars
+  ////mount all cars
   useEffect(() => {
     dispatch(fetchCars({ page: currentPage }));
+      console.log("✅ re-render");
+
   }, [dispatch, currentPage]);
+
+  
 
   ///////create 1 car
   const handleCreate = async () => {
@@ -82,6 +87,13 @@ const Garage = () => {
     dispatch(fetchCars({ page: currentPage }));
   };
 
+  const handleSelectCar = async (carId: number) => {
+    const car = await dispatch(getCar(carId)).unwrap();
+    setEditingCarBrand(car.name);
+    setEditingCarColor(car.color);
+    setIsEditingCarId(car.id);
+  };
+
   const handleUpdate = async () => {
     if (!editingCarBrand || !isEditingCarId) return;
 
@@ -91,8 +103,6 @@ const Garage = () => {
         updatedCar: { name: editingCarBrand, color: editingCarColor },
       })
     );
-
-    dispatch(fetchCars({ page: currentPage }));
 
     setEditingCarBrand('');
     setEditingCarColor('#ff0000');
@@ -173,7 +183,7 @@ const Garage = () => {
               <Flex flexDir="row" gap="2" key={car.id}>
                 <Flex flexDir="row">
                   <Flex flexDir="column" gap="1">
-                    <Button onClick={() => setIsEditingCarId(car.id)}>Select</Button>
+                    <Button onClick={() => handleSelectCar(car.id)}>Select</Button>
                     <Button onClick={() => handleRemove(car.id)}>Remove</Button>
                   </Flex>
 

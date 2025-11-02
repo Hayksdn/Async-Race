@@ -31,6 +31,7 @@ const garageSlice = createSlice({
       .addCase(fetchCars.rejected, (state) => {
         state.loading = false;
       })
+
       .addCase(addCar.fulfilled, (state, action: PayloadAction<Car>) => {})
       .addCase(generateCars.pending, (state) => {
         state.loading = true;
@@ -46,8 +47,7 @@ const garageSlice = createSlice({
       .addCase(updateCar.fulfilled, (state, action: PayloadAction<Car>) => {
         const index = state.cars.findIndex((car) => car.id === action.payload.id);
         if (index !== -1) {
-             state.cars[index] = action.payload;
-
+          state.cars[index] = action.payload;
         }
       });
   },

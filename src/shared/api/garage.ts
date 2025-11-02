@@ -7,9 +7,14 @@ export const getCars = async (page = 1, limit = 7): Promise<CarResponse> => {
     params: { _page: page, _limit: limit },
   });
   const cars = response.data;
-  const totalCount =  Number(response.headers['x-total-count']);
+  const totalCount = Number(response.headers['x-total-count']);
 
-  return {cars, totalCount };
+  return { cars, totalCount };
+};
+
+export const getCarApi = async (carId: number): Promise<Car> => {
+  const { data } = await axios.get(`/garage/${carId}`);
+  return data;
 };
 
 export const createCar = async (newCar: NewCar): Promise<Car> => {
@@ -29,11 +34,11 @@ export const createMultipleCars = async (count: number = 100): Promise<Car[]> =>
   return createdCars;
 };
 
-export const deleteCar = async (carId:number)=>{
-    await axios.delete(`/garage/${carId}`)
-}
+export const deleteCar = async (carId: number) => {
+  await axios.delete(`/garage/${carId}`);
+};
 
-export const updateCarApi = async (carId: number, updatedCar: NewCar): Promise<Car> =>{
-    const {data} = await axios.put(`/garage/${carId}`, updatedCar)
-    return data
-}
+export const updateCarApi = async (carId: number, updatedCar: NewCar): Promise<Car> => {
+  const { data } = await axios.put(`/garage/${carId}`, updatedCar);
+  return data;
+};
