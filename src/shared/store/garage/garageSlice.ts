@@ -7,15 +7,30 @@ interface GarageState {
   loading: boolean;
   totalCount: number;
   totalPageCount: number;
+  // carPositions: Record<number, number>;
 }
 const CARS_PER_PAGE = 7;
 
-const initialState: GarageState = { cars: [], loading: false, totalCount: 0, totalPageCount: 0 };
+const initialState: GarageState = {
+  cars: [],
+  loading: false,
+  totalCount: 0,
+  totalPageCount: 0,
+  // carPositions: {},
+};
 
 const garageSlice = createSlice({
   name: 'garage',
   initialState,
-  reducers: {},
+  reducers: {
+    // setCarPosition(state, action: PayloadAction<{ id: number; position: number }>) {
+    //   state.carPositions[action.payload.id] = action.payload.position;
+    // },
+
+    // resetCarPosition(state, action: PayloadAction<number>) {
+    //   state.carPositions[action.payload] = 0;
+    // },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchCars.pending, (state) => {
@@ -52,5 +67,5 @@ const garageSlice = createSlice({
       });
   },
 });
-
+// export const { setCarPosition, resetCarPosition } = garageSlice.actions;
 export default garageSlice.reducer;

@@ -1,9 +1,9 @@
 import React from 'react'
 
-const WinnersPage = () => {
+const Winners = () => {
   return (
     <div>WinnersPage</div>
   )
 }
 
-export default WinnersPage
+export default Winners

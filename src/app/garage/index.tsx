@@ -28,6 +28,7 @@ import { useStartEngine } from '@/shared/hooks/useStartEngine';
 import { useStopEngine } from '@/shared/hooks/useStopEngine';
 import { useTrackWidth } from '@/shared/hooks/useTrackWidth';
 import { useCarAnimations } from '@/shared/hooks/useCarAnimation';
+import { useAnimation } from '@/shared/context/animationContext';
 const Garage = () => {
   const [brand, setBrand] = useState('');
   const [color, setColor] = useState('#ff0000');
@@ -43,11 +44,17 @@ const Garage = () => {
 
   //////////////////////////////////// container and maxdistance for it
   const { containerRef, getMaxDistance } = useTrackWidth();
-  const ongoingDrive = useRef<Record<number, AbortController | null>>({});
+  const { carContainerRef, animationRefs, ongoingDrive, carPositions } = useAnimation();
 
-  const { carContainerRef, moveCar, stopCar, resetCar } = useCarAnimations(
+  // const ongoingDrive = useRef<Record<number, AbortController | null>>({});
+
+  const { moveCar, stopCar, resetCar } = useCarAnimations(
     containerRef,
-    getMaxDistance
+    getMaxDistance,
+    carContainerRef,
+    animationRefs,
+    carPositions,
+    ongoingDrive
   );
 
   const { startEngine, startAllEngines } = useStartEngine(moveCar, stopCar, ongoingDrive);
@@ -57,11 +64,8 @@ const Garage = () => {
   ////mount all cars
   useEffect(() => {
     dispatch(fetchCars({ page: currentPage }));
-      console.log("✅ re-render");
-
+    console.log('✅ re-render');
   }, [dispatch, currentPage]);
-
-  
 
   ///////create 1 car
   const handleCreate = async () => {
@@ -198,7 +202,7 @@ const Garage = () => {
                     carContainerRef.current[car.id] = el;
                   }}
                   style={{
-                    transform: `rotate(90deg)`,
+                    transform: `translateX(${carPositions.current[car.id] ?? 0}px) rotate(90deg)`,
                   }}
                 >
                   <CarIcon width="50px" color={car.color} height="50px" />
