@@ -9,9 +9,7 @@ import {
   Text,
 } from '@chakra-ui/react';
 
-import { useDispatch, useSelector } from 'react-redux';
-import { type AppDispatch, type RootState } from '@/shared/store/store';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CustomContainer } from '@/shared/components/layout/container';
 import {
   addCar,
@@ -29,6 +27,7 @@ import { useStopEngine } from '@/shared/hooks/useStopEngine';
 import { useTrackWidth } from '@/shared/hooks/useTrackWidth';
 import { useCarAnimations } from '@/shared/hooks/useCarAnimation';
 import { useAnimation } from '@/shared/context/animationContext';
+import { useAppDispatch, useAppSelector } from '@/shared/store/hooks';
 const Garage = () => {
   const [brand, setBrand] = useState('');
   const [color, setColor] = useState('#ff0000');
@@ -38,15 +37,13 @@ const Garage = () => {
   const [isEditingCarId, setIsEditingCarId] = useState(0);
 
   ///////////garage dispatch
-  const dispatch = useDispatch<AppDispatch>();
-  const cars = useSelector((state: RootState) => state.garage.cars);
-  const totalCount = useSelector((state: RootState) => state.garage.totalCount);
+  const dispatch = useAppDispatch();
+  const cars = useAppSelector((state) => state.garage.cars);
+  const totalCount = useAppSelector((state) => state.garage.totalCount);
 
   //////////////////////////////////// container and maxdistance for it
   const { containerRef, getMaxDistance } = useTrackWidth();
   const { carContainerRef, animationRefs, ongoingDrive, carPositions } = useAnimation();
-
-  // const ongoingDrive = useRef<Record<number, AbortController | null>>({});
 
   const { moveCar, stopCar, resetCar } = useCarAnimations(
     containerRef,
@@ -60,6 +57,7 @@ const Garage = () => {
   const { startEngine, startAllEngines } = useStartEngine(moveCar, stopCar, ongoingDrive);
   const { stopEngine, stopAllEngines } = useStopEngine(ongoingDrive, resetCar);
   const [currentPage, setCurrentPage] = useState(1);
+  const isRaceRunning = useAppSelector((state) => state.engine.isRaceRunning);
 
   ////mount all cars
   useEffect(() => {
@@ -138,6 +136,7 @@ const Garage = () => {
             variant="outline"
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
+            disabled={isRaceRunning}
           />
 
           <Input
@@ -148,9 +147,12 @@ const Garage = () => {
             height="40px"
             padding="0"
             borderRadius="5px"
+            disabled={isRaceRunning}
           />
 
-          <Button onClick={handleCreate}>Create</Button>
+          <Button onClick={handleCreate} disabled={isRaceRunning}>
+            Create
+          </Button>
         </Flex>
 
         <Flex flexDir="row" gap="2">
@@ -160,6 +162,7 @@ const Garage = () => {
             variant="outline"
             value={editingCarBrand}
             onChange={(e) => setEditingCarBrand(e.target.value)}
+            disabled={isRaceRunning}
           />
 
           <Input
@@ -170,14 +173,17 @@ const Garage = () => {
             height="40px"
             padding="0"
             borderRadius="5px"
+            disabled={isRaceRunning}
           />
 
-          <Button onClick={handleUpdate} disabled={!isEditingCarId}>
+          <Button onClick={handleUpdate} disabled={!isEditingCarId || isRaceRunning}>
             Update
           </Button>
         </Flex>
 
-        <Button onClick={handleGenerateCars}>GENERATE CARS</Button>
+        <Button onClick={handleGenerateCars} disabled={isRaceRunning}>
+          GENERATE CARS
+        </Button>
       </Flex>
 
       <Flex>
@@ -187,8 +193,12 @@ const Garage = () => {
               <Flex flexDir="row" gap="2" key={car.id}>
                 <Flex flexDir="row">
                   <Flex flexDir="column" gap="1">
-                    <Button onClick={() => handleSelectCar(car.id)}>Select</Button>
-                    <Button onClick={() => handleRemove(car.id)}>Remove</Button>
+                    <Button onClick={() => handleSelectCar(car.id)} disabled={isRaceRunning}>
+                      Select
+                    </Button>
+                    <Button onClick={() => handleRemove(car.id)} disabled={isRaceRunning}>
+                      Remove
+                    </Button>
                   </Flex>
 
                   <Flex flexDir="column" gap="1">
@@ -222,7 +232,7 @@ const Garage = () => {
           count={totalCount}
           pageSize={7}
           page={currentPage}
-          onPageChange={(details) => handlePageChange(details.page)}
+          onPageChange={(details) => !isRaceRunning && handlePageChange(details.page)}
         >
           <ButtonGroup gap="4" size="sm" variant="ghost">
             <Pagination.PrevTrigger asChild>

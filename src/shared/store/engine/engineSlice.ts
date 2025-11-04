@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { setDriveEngine, setEngineStatus } from './engineThunks';
 import type { CarEngineResponse, DriveEngineResponse } from '@/shared/types/engine';
+import type { RootState } from '../store';
 
 interface EngineState {
   engineStatus: Record<number, string>;
@@ -8,6 +9,7 @@ interface EngineState {
   distance: Record<number, number>;
   loading: Record<number, boolean>;
   driving: Record<number, boolean>;
+  isRaceRunning: boolean;
 }
 
 const initialState: EngineState = {
@@ -16,12 +18,17 @@ const initialState: EngineState = {
   distance: {},
   loading: {},
   driving: {},
+  isRaceRunning: false,
 };
 
 const engineSlice = createSlice({
   name: 'engine',
   initialState,
-  reducers: {},
+  reducers: {
+    setRaceRunning: (state, action: PayloadAction<boolean>) => {
+      state.isRaceRunning = action.payload;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(setEngineStatus.fulfilled, (state, action: PayloadAction<CarEngineResponse>) => {
@@ -31,9 +38,9 @@ const engineSlice = createSlice({
         state.velocity[carId] = velocity;
         state.distance[carId] = distance;
 
-         if (status === 'stopped') {
+        if (status === 'stopped') {
           state.driving[carId] = false;
-         } 
+        }
       })
       .addCase(setDriveEngine.fulfilled, (state, action: PayloadAction<DriveEngineResponse>) => {
         state.driving[action.payload.carId] = action.payload.success;
@@ -44,5 +51,7 @@ const engineSlice = createSlice({
       });
   },
 });
+export const { setRaceRunning } = engineSlice.actions;
+export const selectIsRaceRunning = (state: RootState) => state.engine.isRaceRunning;
 
 export default engineSlice.reducer;
