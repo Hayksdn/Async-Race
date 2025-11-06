@@ -4,7 +4,7 @@ import axios from 'axios';
 import Garage from './garage';
 import Winners from './winners';
 
-axios.defaults.baseURL = 'http://localhost:3000/';
+axios.defaults.baseURL = import.meta.env.VITE_API_URL;
 function App() {
   return (
     <BrowserRouter>
