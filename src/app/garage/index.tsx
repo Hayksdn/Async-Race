@@ -9,11 +9,10 @@ import {
   Text,
 } from '@chakra-ui/react';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { CustomContainer } from '@/shared/components/layout/container';
 import {
   addCar,
-  fetchCars,
   generateCars,
   getCar,
   removeCar,
@@ -28,6 +27,9 @@ import { useTrackWidth } from '@/shared/hooks/useTrackWidth';
 import { useCarAnimations } from '@/shared/hooks/useCarAnimation';
 import { useAnimation } from '@/shared/context/animationContext';
 import { useAppDispatch, useAppSelector } from '@/shared/store/hooks';
+import { selectAllCarsArray, selectCurrentPageCars } from '@/shared/store/garage/garageSlice';
+import { useApplyCarPositions } from '@/shared/hooks/useApplyCarPositions';
+import { useFetchGarageCars } from '@/shared/hooks/useFetchGarageCars';
 const Garage = () => {
   const [brand, setBrand] = useState('');
   const [color, setColor] = useState('#ff0000');
@@ -36,17 +38,19 @@ const Garage = () => {
   const [editingCarColor, setEditingCarColor] = useState('#ff0000');
   const [isEditingCarId, setIsEditingCarId] = useState(0);
 
-  ///////////garage dispatch
   const dispatch = useAppDispatch();
-  const cars = useAppSelector((state) => state.garage.cars);
-  const totalCount = useAppSelector((state) => state.garage.totalCount);
 
-  //////////////////////////////////// container and maxdistance for it
+  const { carContainerRef, animationRefs, ongoingDrive, carPositions, isRaceRunning } =
+    useAnimation();
+
+  const cars = useAppSelector(selectCurrentPageCars);
+  useApplyCarPositions(cars, carContainerRef, carPositions);
+
+  const allCars = useAppSelector(selectAllCarsArray);
+
   const { containerRef, getMaxDistance } = useTrackWidth();
-  const { carContainerRef, animationRefs, ongoingDrive, carPositions } = useAnimation();
 
   const { moveCar, stopCar, resetCar } = useCarAnimations(
-    containerRef,
     getMaxDistance,
     carContainerRef,
     animationRefs,
@@ -56,37 +60,22 @@ const Garage = () => {
 
   const { startEngine, startAllEngines } = useStartEngine(moveCar, stopCar, ongoingDrive);
   const { stopEngine, stopAllEngines } = useStopEngine(ongoingDrive, resetCar);
-  const [currentPage, setCurrentPage] = useState(1);
-  const isRaceRunning = useAppSelector((state) => state.engine.isRaceRunning);
 
-  ////mount all cars
-  useEffect(() => {
-    dispatch(fetchCars({ page: currentPage }));
-    console.log('✅ re-render');
-  }, [dispatch, currentPage]);
+  const { currentPage, handlePageChange, totalCount } = useFetchGarageCars();
 
-  ///////create 1 car
   const handleCreate = async () => {
     if (!brand) return;
 
     await dispatch(addCar({ name: brand, color }));
-    dispatch(fetchCars({ page: currentPage }));
     setBrand('');
     setColor('#ff0000');
   };
-  //////////car generation
   const handleGenerateCars = async () => {
     await dispatch(generateCars());
-    dispatch(fetchCars({ page: currentPage }));
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
   };
 
   const handleRemove = async (carId: number) => {
     await dispatch(removeCar(carId));
-    dispatch(fetchCars({ page: currentPage }));
   };
 
   const handleSelectCar = async (carId: number) => {
@@ -116,20 +105,38 @@ const Garage = () => {
       ref={containerRef}
       variant="containerFull"
       mx="auto"
-      display="flex"
-      flexDir="column"
-      gap="3rem"
-      mb="5rem"
-      mt="3rem"
-      bg="green"
+      pt={{ base: '1rem', md: '2rem' }}
     >
-      <Flex flexDir="row" gap="4rem" pt="2rem">
-        <Flex flexDir="row" gap="3">
-          <Button onClick={() => startAllEngines(cars)}>Race</Button>
-          <Button onClick={() => stopAllEngines(cars)}>Reset</Button>
+      <Flex
+        flexDir={{ base: 'column', lg: 'row' }}
+        gap={{ base: '1rem', lg: '4rem' }}
+        flexWrap="wrap"
+        align="center"
+        justify="center"
+        pb="2rem"
+      >
+        <Flex
+          flexDir={{ base: 'column', sm: 'row' }}
+          gap="3"
+          justify="center"
+          align="center"
+          w="100%"
+        >
+          <Button onClick={() => startAllEngines(allCars)} w={{ base: '100%', sm: 'auto' }}>
+            Race
+          </Button>
+          <Button onClick={() => stopAllEngines(allCars)} w={{ base: '100%', sm: 'auto' }}>
+            Reset
+          </Button>
         </Flex>
 
-        <Flex flexDir="row" gap="2">
+        <Flex
+          flexDir={{ base: 'column', sm: 'row' }}
+          gap="2"
+          align="center"
+          justify="center"
+          w="100%"
+        >
           <Input
             placeholder="TYPE CAR BRAND"
             size="md"
@@ -137,6 +144,7 @@ const Garage = () => {
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
             disabled={isRaceRunning}
+            w={{ base: '100%', sm: 'auto' }}
           />
 
           <Input
@@ -145,17 +153,24 @@ const Garage = () => {
             onChange={(e) => setColor(e.target.value)}
             width="40px"
             height="40px"
+            w={{ base: '100%', sm: '40px' }}
             padding="0"
             borderRadius="5px"
             disabled={isRaceRunning}
           />
 
-          <Button onClick={handleCreate} disabled={isRaceRunning}>
+          <Button onClick={handleCreate} disabled={isRaceRunning} w={{ base: '100%', sm: 'auto' }}>
             Create
           </Button>
         </Flex>
 
-        <Flex flexDir="row" gap="2">
+        <Flex
+          flexDir={{ base: 'column', sm: 'row' }}
+          gap="2"
+          align="center"
+          justify="center"
+          w="100%"
+        >
           <Input
             placeholder="TYPE CAR BRAND"
             size="md"
@@ -163,6 +178,7 @@ const Garage = () => {
             value={editingCarBrand}
             onChange={(e) => setEditingCarBrand(e.target.value)}
             disabled={isRaceRunning}
+            w={{ base: '100%', sm: 'auto' }}
           />
 
           <Input
@@ -174,59 +190,94 @@ const Garage = () => {
             padding="0"
             borderRadius="5px"
             disabled={isRaceRunning}
+            w={{ base: '100%', sm: '40px' }}
           />
 
-          <Button onClick={handleUpdate} disabled={!isEditingCarId || isRaceRunning}>
+          <Button
+            onClick={handleUpdate}
+            disabled={!isEditingCarId || isRaceRunning}
+            w={{ base: '100%', sm: 'auto' }}
+          >
             Update
           </Button>
         </Flex>
 
-        <Button onClick={handleGenerateCars} disabled={isRaceRunning}>
+        <Button
+          onClick={handleGenerateCars}
+          disabled={isRaceRunning}
+          w={{ base: '100%', sm: 'auto' }}
+        >
           GENERATE CARS
         </Button>
       </Flex>
 
-      <Flex>
-        <Flex flexDir="column">
-          {cars.map((car) => {
-            return (
-              <Flex flexDir="row" gap="2" key={car.id}>
-                <Flex flexDir="row">
-                  <Flex flexDir="column" gap="1">
-                    <Button onClick={() => handleSelectCar(car.id)} disabled={isRaceRunning}>
-                      Select
-                    </Button>
-                    <Button onClick={() => handleRemove(car.id)} disabled={isRaceRunning}>
-                      Remove
-                    </Button>
-                  </Flex>
+      <Flex flexDir="column" gap="1rem">
+        {cars.map((car) => (
+          <Flex
+            key={car.id}
+            flexDir={{ base: 'column', sm: 'row' }}
+            align={{ base: 'center', sm: 'flex-start' }}
+            justify="flex-start"
+            gap={{ base: '1rem', sm: '2rem' }}
+            borderWidth="1px"
+            borderRadius="md"
+            p="1rem"
+            w="100%"
+            overflow="hidden"
+          >
+            <Flex
+              flexDir="row"
+              flexWrap="wrap"
+              justify="center"
+              align="center"
+              gap="2"
+              w={{ base: '100%', sm: 'auto' }}
+            >
+              <Button onClick={() => handleSelectCar(car.id)} disabled={isRaceRunning} size="sm">
+                Select
+              </Button>
+              <Button onClick={() => handleRemove(car.id)} disabled={isRaceRunning} size="sm">
+                Remove
+              </Button>
+              <Button onClick={() => startEngine(car.id)} size="sm">
+                A
+              </Button>
+              <Button onClick={() => stopEngine(car.id)} size="sm">
+                B
+              </Button>
+            </Flex>
 
-                  <Flex flexDir="column" gap="1">
-                    <Button onClick={() => startEngine(car.id)}>A</Button>
-                    <Button onClick={() => stopEngine(car.id)}>B</Button>
-                  </Flex>
-                </Flex>
-
-                <Box
-                  ref={(el: HTMLDivElement | null) => {
-                    carContainerRef.current[car.id] = el;
-                  }}
-                  style={{
-                    transform: `translateX(${carPositions.current[car.id] ?? 0}px) rotate(90deg)`,
-                  }}
-                >
-                  <CarIcon width="50px" color={car.color} height="50px" />
-                </Box>
-
-                <Text>{car.name}</Text>
-              </Flex>
-            );
-          })}
-        </Flex>
+            <Flex
+              align="center"
+              justify="flex-start"
+              position="relative"
+              w="100%"
+              overflow="hidden"
+              minH={{ base: '60px', md: '80px' }}
+            >
+              <Box
+                ref={(el: HTMLDivElement | null) => {
+                  carContainerRef.current[car.id] = el;
+                  if (el) {
+                    const pos = carPositions.current[car.id] ?? 0;
+                    el.style.transform = `translateX(${pos}px) rotate(90deg)`;
+                  }
+                }}
+              >
+                <CarIcon width="50px" color={car.color} height="50px" />
+              </Box>
+              <Text fontSize={{ base: 'sm', md: 'md' }} ml="2">
+                {car.name}
+              </Text>
+            </Flex>
+          </Flex>
+        ))}
       </Flex>
 
-      <Flex flexDir="row" justify="space-between">
-        <Text color="red.500">GARAGE{totalCount}</Text>
+      <Flex flexDir="row" justify="space-between" align="center" mt="1.5rem">
+        <Text fontWeight="bold" color="red.500">
+          GARAGE {totalCount}
+        </Text>
 
         <Pagination.Root
           count={totalCount}
@@ -234,15 +285,36 @@ const Garage = () => {
           page={currentPage}
           onPageChange={(details) => !isRaceRunning && handlePageChange(details.page)}
         >
-          <ButtonGroup gap="4" size="sm" variant="ghost">
+          <ButtonGroup gap="4" size="sm" variant="solid" colorScheme="blue">
             <Pagination.PrevTrigger asChild>
-              <IconButton>
+              <IconButton
+                bg="blue.500"
+                color="white"
+                _hover={{ bg: 'blue.600' }}
+                _disabled={{ bg: 'gray.400', cursor: 'not-allowed' }}
+                aria-label="Previous page"
+              >
                 <HiChevronLeft />
               </IconButton>
             </Pagination.PrevTrigger>
-            <Pagination.PageText />
+
+            <Pagination.PageText
+              color="white"
+              bg="blue.600"
+              px="3"
+              py="1"
+              borderRadius="md"
+              fontWeight="bold"
+            />
+
             <Pagination.NextTrigger asChild>
-              <IconButton>
+              <IconButton
+                bg="blue.500"
+                color="white"
+                _hover={{ bg: 'blue.600' }}
+                _disabled={{ bg: 'gray.400', cursor: 'not-allowed' }}
+                aria-label="Next page"
+              >
                 <HiChevronRight />
               </IconButton>
             </Pagination.NextTrigger>

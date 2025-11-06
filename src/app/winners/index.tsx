@@ -1,9 +1,7 @@
-import React from 'react'
+import { Flex } from '@chakra-ui/react';
 
 const Winners = () => {
-  return (
-    <div>WinnersPage</div>
-  )
-}
+  return <Flex>WinnersPage</Flex>;
+};
 
-export default Winners
+export default Winners;

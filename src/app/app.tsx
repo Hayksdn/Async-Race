@@ -10,12 +10,7 @@ function App() {
     <BrowserRouter>
       <Layout>
         <Routes>
-          <Route
-            path="/"
-            element={
-                <Garage />
-            }
-          />
+          <Route path="/" element={<Garage />} />
           <Route path="/winners" element={<Winners />} />
         </Routes>
       </Layout>

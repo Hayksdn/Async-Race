@@ -1,10 +1,8 @@
 import { setDriveEngine, setEngineStatus } from '../store/engine/engineThunks';
 import type { RefObject } from 'react';
 import type { Car } from '../types/car';
-import type { OngoingDrive } from '../context/animationContext';
+import { useAnimation, type OngoingDrive } from '../context/animationContext';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { updateRaceState } from '../utils/engineHelper';
-import { setRaceRunning } from '../store/engine/engineSlice';
 
 export const useStartEngine = (
   moveCar: (carId: number, velocity: number, distance: number) => void,
@@ -14,6 +12,7 @@ export const useStartEngine = (
   const driving = useAppSelector((state) => state.engine.driving);
   const engineStatus = useAppSelector((state) => state.engine.engineStatus);
   const dispatch = useAppDispatch();
+  const { setIsRaceRunning } = useAnimation();
 
   const startEngine = async (carId: number) => {
     if (driving[carId] || engineStatus[carId] === 'started') return;
@@ -21,8 +20,6 @@ export const useStartEngine = (
     const controller = new AbortController();
 
     try {
-      dispatch(setRaceRunning(true));
-
       const result = await dispatch(setEngineStatus({ carId, status: 'started' })).unwrap();
 
       ongoingDrive.current[carId] = { controller, status: 'running' };
@@ -34,19 +31,21 @@ export const useStartEngine = (
       ).unwrap();
 
       ongoingDrive.current[carId] = { controller: null, status: 'finished' };
-
-      updateRaceState(ongoingDrive.current, dispatch);
+      dispatch(setEngineStatus({ carId, status: 'stopped' }));
     } catch (e) {
       stopCar(carId);
-
-      updateRaceState(ongoingDrive.current, dispatch);
-
-      console.log('Drive failed', performance.now());
+      dispatch(setEngineStatus({ carId, status: 'stopped' }));
     }
   };
 
   const startAllEngines = (cars: Car[]) => {
-    cars.forEach((car) => startEngine(car.id));
+    setIsRaceRunning(true);
+
+    const enginePromises = cars.map((car) => startEngine(car.id));
+
+    Promise.allSettled(enginePromises).finally(() => {
+      setIsRaceRunning(false);
+    });
   };
 
   return { startEngine, startAllEngines };

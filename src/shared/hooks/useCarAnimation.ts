@@ -1,7 +1,6 @@
 import { type RefObject } from 'react';
 
 export const useCarAnimations = (
-  containerRef: RefObject<HTMLDivElement | null>,
   getMaxDistance: (carEl: HTMLDivElement | null, distance: number) => number,
   carContainerRef: RefObject<Record<number, HTMLDivElement | null>>,
   animationRefs: RefObject<Record<number, number>>,
@@ -16,14 +15,17 @@ export const useCarAnimations = (
       if (!start) start = timestamp;
 
       const carEl = carContainerRef.current[carId];
-      if (!carEl || !containerRef.current) return;
 
-      const maxDistance = getMaxDistance(carEl, distance);
+      const maxDistance = carEl ? getMaxDistance(carEl, distance) : distance;
+
       const elapsed = (timestamp - start) / 1000;
       const traveled = Math.min(elapsed * velocity, maxDistance);
 
       carPositions.current[carId] = traveled;
-      carEl.style.transform = `translateX(${traveled}px) rotate(90deg)`;
+
+      if (carEl) {
+        carEl.style.transform = `translateX(${traveled}px) rotate(90deg)`;
+      }
 
       if (traveled < distance) {
         animationRefs.current[carId] = requestAnimationFrame(step);
@@ -32,6 +34,9 @@ export const useCarAnimations = (
           status: 'running',
         };
       } else {
+        carPositions.current[carId] = distance;
+        if (carEl) carEl.style.transform = `translateX(${distance}px) rotate(90deg)`;
+
         cancelAnimationFrame(animationRefs.current[carId]);
         delete animationRefs.current[carId];
         ongoingDrive.current[carId] = { controller: null, status: 'finished' };

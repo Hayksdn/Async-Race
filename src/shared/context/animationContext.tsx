@@ -10,6 +10,8 @@ export type AnimationContextProps = {
   animationRefs: RefObject<Record<number, number>>;
   carPositions: React.RefObject<Record<number, number>>;
   ongoingDrive: RefObject<Record<number, OngoingDrive | null>>;
+  isRaceRunning: boolean;
+  setIsRaceRunning: (value: boolean) => void;
 };
 
 export const AnimationContext = createContext<AnimationContextProps | null>(null);

@@ -19,8 +19,6 @@ export const useTrackWidth = () => {
 
   const getMaxDistance = (carEl: HTMLDivElement | null, distance: number) => {
     if (!carEl || !containerRef.current) {
-      console.log('containerRef.current', containerRef.current);
-      console.log(carEl, 'carel');
       return 0;
     }
 

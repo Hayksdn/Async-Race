@@ -8,17 +8,21 @@ const Hero = () => {
       variant="container"
       mx="auto"
       display="flex"
-      flexDir="row"
-      gap="3rem"
+      flexDir={{ base: 'column', md: 'row' }}
+      gap={{ base: '1rem', md: '3rem' }}
       mb="5rem"
       mt="3rem"
     >
-      <Flex flexDir="column" gap="4" pt="4" pl="4">
+      <Flex flexDir={{ base: 'row', md: 'column' }} gap="4" pt="4" pl="4" justify="center">
         <NavLink to="/">
-          <Button variant="primary">GARAGE</Button>
+          <Button variant="primary" width={{ base: '120px', md: 'auto' }}>
+            GARAGE
+          </Button>
         </NavLink>
         <NavLink to="/winners">
-          <Button variant="secondary">WINNERS</Button>{' '}
+          <Button variant="secondary" width={{ base: '120px', md: 'auto' }}>
+            WINNERS
+          </Button>
         </NavLink>
       </Flex>
     </CustomContainer>
