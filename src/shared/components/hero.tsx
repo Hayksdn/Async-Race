@@ -15,12 +15,12 @@ const Hero = () => {
     >
       <Flex flexDir={{ base: 'row', md: 'column' }} gap="4" pt="4" pl="4" justify="center">
         <NavLink to="/">
-          <Button variant="primary" width={{ base: '120px', md: 'auto' }}>
+          <Button variant="solid" width={{ base: '120px', md: 'auto' }}>
             GARAGE
           </Button>
         </NavLink>
         <NavLink to="/winners">
-          <Button variant="secondary" width={{ base: '120px', md: 'auto' }}>
+          <Button variant="outline" width={{ base: '120px', md: 'auto' }}>
             WINNERS
           </Button>
         </NavLink>
